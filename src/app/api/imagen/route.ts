@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { totalEmissions, category } = body;
+    const { totalEmissions } = body;
 
     const rawApiKey = process.env.GEMINI_API_KEY || "";
     const apiKey = rawApiKey.replace(/['"]/g, "").trim();
@@ -68,7 +68,7 @@ Make it emotionally resonant and visual. Include specific imagery of forests, oc
       label: mockData.label,
       totalEmissions,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Imagen API error:", error);
     return NextResponse.json({
       imageUrl: null,

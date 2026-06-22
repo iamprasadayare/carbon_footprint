@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import {
-  Cpu, Database, ShieldAlert, Network, Zap, Activity,
-  AlertCircle, Brain, Globe, MessageSquare, Video,
-  FileText, Camera, Languages
+  Database, ShieldAlert, Network, Zap, Activity,
+  AlertCircle, Brain, Globe
 } from "lucide-react";
 
 interface GcpService {
@@ -18,7 +17,7 @@ interface GcpService {
 
 interface Category {
   title: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
   color: string;
   services: GcpService[];
 }
@@ -98,7 +97,7 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-export default function GcpConsole() {
+const GcpConsole = React.memo(() => {
   const [selectedCategory, setSelectedCategory] = useState<number>(0);
 
   const totalServices = CATEGORIES.reduce((acc, cat) => acc + cat.services.length, 0);
@@ -108,7 +107,7 @@ export default function GcpConsole() {
   );
 
   return (
-    <div className="glass rounded-2xl p-5 sm:p-6 shadow-2xl space-y-5">
+    <div className="glass rounded-2xl p-5 sm:p-6 shadow-2xl space-y-5" aria-label="GCP Services Console">
 
       {/* Stats Panel */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950/80 rounded-xl p-4 border border-slate-900 text-xs">
@@ -123,7 +122,7 @@ export default function GcpConsole() {
         <div className="space-y-0.5">
           <span className="text-slate-500 font-bold uppercase tracking-wider block text-[10px]">Cloud Efficiency</span>
           <span className="text-2xl font-black text-emerald-400 flex items-center gap-1 font-heading">
-            <Zap className="w-5 h-5 fill-emerald-400" /> 100%
+            <Zap className="w-5 h-5 fill-emerald-400" aria-hidden="true" /> 100%
           </span>
         </div>
         <div className="space-y-0.5">
@@ -133,7 +132,7 @@ export default function GcpConsole() {
       </div>
 
       {/* Category Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-slate-900 pb-3" role="tablist">
+      <div className="flex flex-wrap gap-2 border-b border-slate-900 pb-3" role="tablist" aria-label="Service Categories">
         {CATEGORIES.map((cat, idx) => {
           const CatIcon = cat.icon;
           const isActive = idx === selectedCategory;
@@ -143,6 +142,7 @@ export default function GcpConsole() {
               type="button"
               role="tab"
               aria-selected={isActive}
+              aria-label={`Select ${cat.title} category`}
               onClick={() => setSelectedCategory(idx)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
                 isActive
@@ -150,7 +150,7 @@ export default function GcpConsole() {
                   : "border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200"
               }`}
             >
-              <CatIcon className="w-3.5 h-3.5" />
+              <CatIcon className="w-3.5 h-3.5" aria-hidden="true" />
               <span>{cat.title}</span>
               <span className="text-[10px] opacity-60">({CATEGORIES[idx].services.length})</span>
             </button>
@@ -159,10 +159,11 @@ export default function GcpConsole() {
       </div>
 
       {/* Services Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="list" aria-label="Services List">
         {CATEGORIES[selectedCategory].services.map((svc) => (
           <div
             key={svc.name}
+            role="listitem"
             className="p-4 rounded-xl border border-slate-900 bg-slate-950/40 space-y-3 hover:border-slate-800 transition-all flex flex-col justify-between"
           >
             <div className="space-y-2">
@@ -170,7 +171,7 @@ export default function GcpConsole() {
                 <div className="flex items-center gap-2">
                   <h4 className="font-extrabold text-slate-200 text-sm font-heading">{svc.name}</h4>
                   {svc.integrated && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-bold">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-bold" aria-label="Live Service">
                       LIVE
                     </span>
                   )}
@@ -185,6 +186,7 @@ export default function GcpConsole() {
                       ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
                       : "bg-slate-900 text-slate-500 border border-slate-800"
                   }`}
+                  aria-label={`Status: ${svc.status.replace("_", " ")}`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
@@ -205,10 +207,10 @@ export default function GcpConsole() {
 
             <div className="flex justify-between items-center bg-slate-950/80 border border-slate-900/60 rounded-lg px-3 py-2 text-[10px] text-slate-500 font-semibold">
               <div className="flex items-center gap-1">
-                <Activity className="w-3 h-3 text-slate-600" />
+                <Activity className="w-3 h-3 text-slate-600" aria-hidden="true" />
                 <span>{svc.metric}</span>
               </div>
-              <span className="text-emerald-500">{svc.carbonOffset}</span>
+              <span className="text-emerald-500" aria-label={`Carbon Offset: ${svc.carbonOffset}`}>{svc.carbonOffset}</span>
             </div>
           </div>
         ))}
@@ -216,11 +218,14 @@ export default function GcpConsole() {
 
       {/* Footer Note */}
       <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 flex gap-3 text-xs leading-relaxed text-slate-400">
-        <AlertCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+        <AlertCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
         <p>
-          <strong className="text-slate-200">GCP Net-Zero Carbon Profile:</strong> EcoQuest runs on Google Cloud's carbon-neutral infrastructure (100% matched with renewable energy). All {totalServices} services are integrated and functional — not just listed. Cloud Run auto-scales to zero when idle, saving ~1.8g CO2e per idle hour vs always-on servers.
+          <strong className="text-slate-200">GCP Net-Zero Carbon Profile:</strong> EcoQuest runs on Google Cloud&apos;s carbon-neutral infrastructure (100% matched with renewable energy). All {totalServices} services are integrated and functional — not just listed. Cloud Run auto-scales to zero when idle, saving ~1.8g CO2e per idle hour vs always-on servers.
         </p>
       </div>
     </div>
   );
-}
+});
+
+GcpConsole.displayName = 'GcpConsole';
+export default GcpConsole;

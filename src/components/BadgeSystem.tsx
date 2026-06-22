@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useAppState } from "@/app/providers";
 import { Leaf, Globe, Zap, TreeDeciduous, Award, Star, Crown } from "lucide-react";
 import { calculateBadges } from "@/lib/firebase";
 
 const BADGE_DATA: Record<string, {
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string }>;
   emoji: string;
   name: string;
   description: string;
@@ -90,7 +90,7 @@ const BADGE_DATA: Record<string, {
 
 export default function BadgeSystem() {
   const { points, missions } = useAppState();
-  const missionsCompleted = missions.filter((m: any) => m.completed).length;
+  const missionsCompleted = missions.filter((m) => m.completed).length;
   const earnedBadges = calculateBadges(points, missionsCompleted);
 
   const allBadgeIds = Object.keys(BADGE_DATA);
@@ -135,7 +135,7 @@ export default function BadgeSystem() {
         {allBadgeIds.map((badgeId) => {
           const badge = BADGE_DATA[badgeId];
           const isEarned = earnedBadges.includes(badgeId);
-          const BadgeIcon = badge.icon;
+          const _BadgeIcon = badge.icon;
 
           return (
             <div

@@ -13,7 +13,6 @@ import {
   saveFootprintScore,
   saveUserMissions,
   getUserData,
-  getLeaderboard,
   trackEvent,
   getFeatureFlags,
   calculateBadges,
@@ -92,24 +91,24 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
         const userData = await getUserData(userUid);
         if (userData) {
-          const savedBonus = (userData as any).bonusPoints || 0;
+          const savedBonus = userData.bonusPoints || 0;
           setBonusPoints(savedBonus);
           if (userData.answers) {
-            setAnswers(userData.answers);
-            const computedBreakdown = calculateFootprint(userData.answers);
+            setAnswers(userData.answers as unknown as AuditAnswers);
+            const computedBreakdown = calculateFootprint(userData.answers as unknown as AuditAnswers);
             setEmissions(computedBreakdown);
             setStage("dashboard");
           }
           if (userData.missions) {
-            setMissions(userData.missions);
+            setMissions(userData.missions as Mission[]);
             const completed = userData.missions
-              .filter((m: any) => m.completed)
-              .map((m: any) => m.id);
+              .filter((m: { completed: boolean }) => m.completed)
+              .map((m: { id: string }) => m.id);
             setCompletedMissionIds(completed);
 
             const totalPoints = userData.missions
-              .filter((m: any) => m.completed)
-              .reduce((sum: number, m: any) => sum + (m.points || 0), savedBonus);
+              .filter((m: { completed: boolean }) => m.completed)
+              .reduce((sum: number, m: { points?: number }) => sum + (m.points || 0), savedBonus);
             setPoints(totalPoints);
 
             const earnedBadges = calculateBadges(totalPoints, completed.length);
@@ -143,8 +142,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         isAnonymous: false,
       });
       trackEvent("google_login");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed");
     }
   };
 
@@ -191,7 +190,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const timestamp = new Date().toISOString();
       await saveFootprintScore(uid, {
         breakdown,
-        answers: newAnswers,
+        answers: newAnswers as unknown as Record<string, unknown>,
         timestamp,
         bonusPoints,
         displayName: user?.displayName || "Anonymous EcoWarrior",
@@ -238,9 +237,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       await saveUserMissions(uid, formattedMissions);
       setStage("dashboard");
       trackEvent("missions_generated", { mission_count: formattedMissions.length });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Audit submission failed:", err);
-      setError(err.message || "Failed to submit audit. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to submit audit. Please try again.");
     } finally {
       setLoadingMissions(false);
     }
@@ -251,17 +250,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     const updatedMissions = missions.map((m) => {
       if (m.id === missionId) {
-        return { ...m, completed: !(m as any).completed };
+        return { ...m, completed: !completedMissionIds.includes(m.id) };
       }
       return m;
     });
 
     const completed = updatedMissions
-      .filter((m: any) => m.completed)
+      .filter((m) => completedMissionIds.includes(m.id) ? m.id !== missionId : m.id === missionId)
       .map((m) => m.id);
 
     const totalPoints = updatedMissions
-      .filter((m: any) => m.completed)
+      .filter((m) => completed.includes(m.id))
       .reduce((sum, m) => sum + m.points, bonusPoints);
 
     setMissions(updatedMissions);

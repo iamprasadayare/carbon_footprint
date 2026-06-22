@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const targetLanguage = langMap[lang] || "English";
 
     // Mock tips if no API key
-    const mockTips: Record<string, any[]> = {
+    const mockTips: Record<string, Array<{ tip: string; category: string; icon: string }>> = {
       en: [
         { tip: "Replace one beef meal per week with lentils — saves ~3.5 kg CO2e per meal!", category: "diet", icon: "🥗" },
         { tip: "Switch to LED bulbs throughout your home — 75% less energy than incandescent!", category: "energy", icon: "💡" },
@@ -85,7 +85,7 @@ Return a JSON array with objects: { tip: string, category: "diet"|"energy"|"tran
     } catch {
       return NextResponse.json({ tips: mockTips[lang] || mockTips["en"], topic, language: targetLanguage, source: "fallback" });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Translate/Tips API error:", error);
     return NextResponse.json({
       tips: [

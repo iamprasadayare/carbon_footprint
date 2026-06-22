@@ -16,23 +16,23 @@ export async function POST(request: Request) {
 
     if (type === "sentiment") {
       // Cloud Natural Language API — sentiment analysis for forum moderation
-      return await analyzeSentiment(data.text, apiKey);
+      return await analyzeSentiment(data.text);
     } else if (type === "climate_insights") {
       // Gemini-powered climate insights
       return await generateClimateInsights(data, apiKey);
     } else if (type === "country_climate") {
       // Country-specific climate plan data
-      return await getCountryClimatePlan(data.country, apiKey);
+      return await getCountryClimatePlan(data.country);
     }
 
     return NextResponse.json({ error: "Unknown type" }, { status: 400 });
-  } catch (error: any) {
-    console.error("Insights API error:", error);
+  } catch (error: unknown) {
+    console.error("Translate/Tips API error:", error);
     return NextResponse.json({ error: "Failed to generate insights" }, { status: 500 });
   }
 }
 
-async function analyzeSentiment(text: string, apiKey: string) {
+async function analyzeSentiment(text: string) {
   // Simulate Cloud Natural Language API sentiment analysis
   const positiveWords = ["great", "love", "amazing", "reduce", "green", "eco", "save", "better", "clean", "sustainable", "solar", "plant"];
   const negativeWords = ["hate", "terrible", "spam", "awful", "stupid", "idiot", "garbage"];
@@ -59,7 +59,7 @@ async function analyzeSentiment(text: string, apiKey: string) {
   });
 }
 
-async function generateClimateInsights(data: any, apiKey: string) {
+async function generateClimateInsights(data: { totalEmissions: number; transitEmissions?: number; dietEmissions?: number; energyEmissions?: number }, apiKey: string) {
   const mockInsights = {
     globalComparison: {
       worldAvgWeekly: 230,
@@ -74,7 +74,7 @@ async function generateClimateInsights(data: any, apiKey: string) {
       potentialSavings: (((data.totalEmissions || 150) * 0.35) * 52).toFixed(0),
     },
     insights: [
-      `Your weekly footprint is ${data.totalEmissions < 230 ? "below" : "above"} the global average of 230 kg CO2e.`,
+      `Your weekly footprint is ${(data.totalEmissions) < 230 ? "below" : "above"} the global average of 230 kg CO2e.`,
       `Completing all your missions could reduce your emissions by approximately 35%, saving ~${(((data.totalEmissions || 150) * 0.35) * 52).toFixed(0)} kg CO2e/year.`,
       `That's equivalent to planting ${Math.round(((data.totalEmissions || 150) * 0.35) * 52 / 22)} trees every year!`,
     ],
@@ -98,7 +98,7 @@ Compare to: World avg (230 kg/wk), India avg (85 kg/wk), USA avg (480 kg/wk).
 Make each insight motivating, specific, and data-driven. Return just an array of 3 insight strings.`;
 
     const result = await model.generateContent(prompt);
-    let text = result.response.text().trim().replace(/```json\n?/g, "").replace(/```\n?/g, "");
+    const text = result.response.text().trim().replace(/```json\n?/g, "").replace(/```\n?/g, "");
 
     let insights;
     try {
@@ -113,8 +113,8 @@ Make each insight motivating, specific, and data-driven. Return just an array of
   }
 }
 
-async function getCountryClimatePlan(country: string, apiKey: string) {
-  const countryPlans: Record<string, any> = {
+async function getCountryClimatePlan(country: string) {
+  const countryPlans: Record<string, { target: string; progress: string; leader: string; initiatives: string[]; co2PerCapita: string }> = {
     India: {
       target: "Net zero by 2070; 500 GW renewable energy by 2030",
       progress: "245 GW renewable capacity installed (2024)",

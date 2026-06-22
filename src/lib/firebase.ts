@@ -1,9 +1,15 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
-import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, addDoc, updateDoc, increment, serverTimestamp, where, Timestamp } from "firebase/firestore";
+import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, addDoc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getAnalytics, logEvent, isSupported } from "firebase/analytics";
 import { getRemoteConfig, fetchAndActivate, getValue } from "firebase/remote-config";
+import type { FirebaseApp } from "firebase/app";
+import type { Auth } from "firebase/auth";
+import type { Firestore } from "firebase/firestore";
+import type { FirebaseStorage } from "firebase/storage";
+import type { Analytics } from "firebase/analytics";
+import type { RemoteConfig } from "firebase/remote-config";
 
 // Web App's Firebase configuration from environment variables
 const firebaseConfig = {
@@ -22,12 +28,12 @@ const isMock =
   firebaseConfig.apiKey === "mock_firebase_key" ||
   firebaseConfig.apiKey.trim() === "";
 
-let app: any;
-let auth: any;
-let db: any;
-let storage: any;
-let analytics: any;
-let remoteConfig: any;
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
+let analytics: Analytics | null = null;
+let remoteConfig: RemoteConfig | null = null;
 
 if (!isMock) {
   try {
@@ -40,7 +46,7 @@ if (!isMock) {
     if (typeof window !== "undefined") {
       isSupported().then((supported) => {
         if (supported) {
-          analytics = getAnalytics(app);
+          analytics = getAnalytics(app as FirebaseApp);
         }
       });
 
@@ -54,8 +60,8 @@ if (!isMock) {
           enable_eco_avatar: "true",
           weekly_tip: "Reduce, Reuse, Recycle — every action counts!",
         };
-      } catch (e) {
-        console.warn("Remote Config init failed:", e);
+      } catch {
+        console.warn("Remote Config init failed");
       }
     }
   } catch (error) {
@@ -118,8 +124,8 @@ export async function signInWithGoogle(): Promise<{ uid: string; displayName: st
       email: user.email || "",
       photoURL: user.photoURL || "",
     };
-  } catch (error: any) {
-    throw new Error("Google sign-in failed: " + error.message);
+  } catch (error: unknown) {
+    throw new Error("Google sign-in failed: " + (error instanceof Error ? error.message : String(error)));
   }
 }
 
@@ -140,7 +146,7 @@ export async function saveFootprintScore(
   uid: string,
   scoreData: {
     breakdown: { transit: number; diet: number; energy: number; total: number };
-    answers: any;
+    answers: Record<string, unknown>;
     timestamp: string;
     bonusPoints?: number;
     displayName?: string;
@@ -190,7 +196,7 @@ export async function saveFootprintScore(
 }
 
 // ─── SERVICE 5: Firestore — Save Missions ───────────────────────────────────
-export async function saveUserMissions(uid: string, missions: any[]) {
+export async function saveUserMissions(uid: string, missions: Array<{ id: string; task: string; category: string; points: number; rationale: string; completed?: boolean }>) {
   if (isMock || !db) {
     localStorage.setItem(`ecoquest_missions_${uid}`, JSON.stringify(missions));
     return;
@@ -230,9 +236,9 @@ export async function saveUserMissions(uid: string, missions: any[]) {
 // ─── SERVICE 6: Firestore — Get User Data ───────────────────────────────────
 export async function getUserData(uid: string): Promise<{
   score?: number;
-  breakdown?: any;
-  answers?: any;
-  missions?: any[];
+  breakdown?: { transit: number; diet: number; energy: number; total: number };
+  answers?: Record<string, unknown>;
+  missions?: Array<{ id: string; task: string; category: string; points: number; rationale: string; completed: boolean }>;
   bonusPoints?: number;
   displayName?: string;
   badges?: string[];
@@ -242,8 +248,8 @@ export async function getUserData(uid: string): Promise<{
     const scoreStr = localStorage.getItem(`ecoquest_score_${uid}`);
     const missionsStr = localStorage.getItem(`ecoquest_missions_${uid}`);
     if (!scoreStr && !missionsStr) return null;
-    const scoreData = scoreStr ? JSON.parse(scoreStr) : {};
-    const missions = missionsStr ? JSON.parse(missionsStr) : [];
+    const scoreData = scoreStr ? JSON.parse(scoreStr) as { breakdown?: { transit: number; diet: number; energy: number; total: number }; answers?: Record<string, unknown>; bonusPoints?: number } : {};
+    const missions = missionsStr ? JSON.parse(missionsStr) as Array<{ id: string; task: string; category: string; points: number; rationale: string; completed: boolean }> : [];
     return {
       score: scoreData.breakdown?.total,
       breakdown: scoreData.breakdown,
@@ -257,7 +263,7 @@ export async function getUserData(uid: string): Promise<{
     const userDocRef = doc(db, "users", uid);
     const docSnap = await getDoc(userDocRef);
     if (docSnap.exists()) {
-      return docSnap.data() as any;
+      return docSnap.data() as { score?: number; breakdown?: { transit: number; diet: number; energy: number; total: number }; answers?: Record<string, unknown>; missions?: Array<{ id: string; task: string; category: string; points: number; rationale: string; completed: boolean }>; bonusPoints?: number; displayName?: string; badges?: string[]; country?: string };
     }
     return null;
   } catch (error) {
@@ -267,7 +273,7 @@ export async function getUserData(uid: string): Promise<{
 }
 
 // ─── SERVICE 7: Firestore — Global Leaderboard ──────────────────────────────
-export async function getLeaderboard(limitCount = 50): Promise<any[]> {
+export async function getLeaderboard(limitCount = 50): Promise<Array<{ id: string; displayName: string; totalPoints: number; score: number; country: string; missionsCompleted: number; badge?: string }>> {
   if (isMock || !db) {
     // Return mock leaderboard data
     return generateMockLeaderboard();
@@ -277,9 +283,9 @@ export async function getLeaderboard(limitCount = 50): Promise<any[]> {
     const leaderboardRef = collection(db, "leaderboard");
     const q = query(leaderboardRef, orderBy("totalPoints", "desc"), limit(limitCount));
     const querySnapshot = await getDocs(q);
-    const entries: any[] = [];
-    querySnapshot.forEach((doc) => {
-      entries.push({ id: doc.id, ...doc.data() });
+    const entries: Array<{ id: string; displayName: string; totalPoints: number; score: number; country: string; missionsCompleted: number; badge?: string }> = [];
+    querySnapshot.forEach((docSnap) => {
+      entries.push({ id: docSnap.id, ...docSnap.data() as { displayName: string; totalPoints: number; score: number; country: string; missionsCompleted: number; badge?: string } });
     });
     return entries.length > 0 ? entries : generateMockLeaderboard();
   } catch (error) {
@@ -307,17 +313,17 @@ function generateMockLeaderboard() {
 }
 
 // ─── SERVICE 8: Firestore — Community Forum Posts ───────────────────────────
-export async function getForumPosts(limitCount = 20): Promise<any[]> {
+export async function getForumPosts(limitCount = 20): Promise<Array<{ id: string; displayName?: string; content: string; category: string; likes: number; createdAt?: { seconds: number } }>> {
   if (isMock || !db) return getMockForumPosts();
 
   try {
     const postsRef = collection(db, "forum");
     const q = query(postsRef, orderBy("createdAt", "desc"), limit(limitCount));
     const snapshot = await getDocs(q);
-    const posts: any[] = [];
-    snapshot.forEach((doc) => posts.push({ id: doc.id, ...doc.data() }));
+    const posts: Array<{ id: string; displayName?: string; content: string; category: string; likes: number; createdAt?: { seconds: number } }> = [];
+    snapshot.forEach((docSnap) => posts.push({ id: docSnap.id, ...docSnap.data() as { displayName?: string; content: string; category: string; likes: number; createdAt?: { seconds: number } } }));
     return posts.length > 0 ? posts : getMockForumPosts();
-  } catch (e) {
+  } catch {
     return getMockForumPosts();
   }
 }
@@ -335,7 +341,7 @@ export async function addForumPost(post: { uid: string; displayName: string; con
       createdAt: serverTimestamp(),
     });
     return docRef.id;
-  } catch (e) {
+  } catch {
     throw new Error("Failed to post");
   }
 }
@@ -345,8 +351,8 @@ export async function likeForumPost(postId: string): Promise<void> {
   try {
     const postRef = doc(db, "forum", postId);
     await updateDoc(postRef, { likes: increment(1) });
-  } catch (e) {
-    console.error("Like failed:", e);
+  } catch {
+    console.error("Like failed");
   }
 }
 
@@ -378,14 +384,14 @@ export async function uploadEcoAvatar(uid: string, imageBlob: Blob): Promise<str
 }
 
 // ─── SERVICE 10: Firebase Analytics — Log Events ────────────────────────────
-export function trackEvent(eventName: string, params?: Record<string, any>) {
+export function trackEvent(eventName: string, params?: Record<string, string | number | boolean>) {
   if (typeof window === "undefined") return;
   try {
     if (analytics) {
       logEvent(analytics, eventName, params);
     }
     console.log(`[Analytics] ${eventName}`, params);
-  } catch (e) {
+  } catch {
     // silently fail
   }
 }
@@ -409,7 +415,7 @@ export async function getFeatureFlags(): Promise<Record<string, string>> {
       enable_eco_avatar: getValue(remoteConfig, "enable_eco_avatar").asString(),
       weekly_tip: getValue(remoteConfig, "weekly_tip").asString(),
     };
-  } catch (e) {
+  } catch {
     return {
       enable_forum: "true",
       enable_leaderboard: "true",

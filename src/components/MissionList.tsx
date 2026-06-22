@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useAppState } from "@/app/providers";
-import { CheckSquare, Square, Award, Sparkles, AlertCircle, HelpCircle } from "lucide-react";
-import { Mission } from "@/app/api/gemini/route";
+import { CheckSquare, Square, Award, Sparkles, AlertCircle } from "lucide-react";
+
 
 export default function MissionList() {
   const { missions, toggleMission, completedMissionIds, points } = useAppState();
@@ -89,7 +89,7 @@ export default function MissionList() {
         {missions.map((mission) => {
           const isCompleted = completedMissionIds.includes(mission.id);
           const isHovered = hoveredMissionId === mission.id;
-          const config = categoryConfigs[mission.category || "diet"];
+          const config = categoryConfigs[mission.category as keyof typeof categoryConfigs] ?? categoryConfigs.diet;
 
           return (
             <label

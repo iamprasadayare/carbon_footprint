@@ -138,7 +138,7 @@ export async function GET(request: Request) {
     if (!response.ok) throw new Error("YouTube API failed");
 
     const data = await response.json();
-    const liveVideos = data.items?.map((item: any) => ({
+    const liveVideos = data.items?.map((item: { id: { videoId: string }; snippet: { title: string; channelTitle: string; thumbnails: { high?: { url: string }; medium?: { url: string } }; description: string } }) => ({
       id: item.id.videoId,
       title: item.snippet.title,
       channel: item.snippet.channelTitle,
@@ -154,7 +154,7 @@ export async function GET(request: Request) {
       source: "youtube_api",
       categories: ["all", "science", "leaders", "policy", "action", "technology", "india"],
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("YouTube API error:", error);
     return NextResponse.json({
       videos: CLIMATE_VIDEOS_MOCK,

@@ -104,8 +104,8 @@ export default function Leaderboard({ currentUid }: { currentUid?: string | null
               <Trophy className="w-5 h-5 text-amber-400" />
             </div>
             <div>
-              <h2 className="font-black text-slate-100 font-heading">Global EcoLeaderboard</h2>
-              <p className="text-xs text-slate-400">Powered by Firestore + BigQuery · Resets weekly</p>
+              <h2 className="font-black text-slate-100 font-heading">Global Leaderboard</h2>
+              <p className="text-xs text-slate-400">Firebase + BigQuery · Resets weekly</p>
             </div>
           </div>
 

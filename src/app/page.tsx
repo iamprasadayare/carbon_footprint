@@ -1,19 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useAppState } from "@/app/providers";
-import AuditStack from "@/components/AuditStack";
-import ScoreVisualizer from "@/components/ScoreVisualizer";
-import MissionList from "@/components/MissionList";
-import GcpConsole from "@/components/GcpConsole";
-import Leaderboard from "@/components/Leaderboard";
-import AcademyPanel from "@/components/AcademyPanel";
-import WorldMap from "@/components/WorldMap";
-import ForumFeed from "@/components/ForumFeed";
-import InsightsPanel from "@/components/InsightsPanel";
-import BadgeSystem from "@/components/BadgeSystem";
-import ChatAdvisor from "@/components/ChatAdvisor";
-import TimelineQuiz from "@/components/TimelineQuiz";
+import dynamic from "next/dynamic";
+
+const AuditStack = dynamic(() => import("@/components/AuditStack"));
+const ScoreVisualizer = dynamic(() => import("@/components/ScoreVisualizer"));
+const MissionList = dynamic(() => import("@/components/MissionList"));
+const GcpConsole = dynamic(() => import("@/components/GcpConsole"));
+const Leaderboard = dynamic(() => import("@/components/Leaderboard"));
+const AcademyPanel = dynamic(() => import("@/components/AcademyPanel"));
+const WorldMap = dynamic(() => import("@/components/WorldMap"));
+const ForumFeed = dynamic(() => import("@/components/ForumFeed"));
+const InsightsPanel = dynamic(() => import("@/components/InsightsPanel"));
+const BadgeSystem = dynamic(() => import("@/components/BadgeSystem"));
+const ChatAdvisor = dynamic(() => import("@/components/ChatAdvisor"), { ssr: false });
+const TimelineQuiz = dynamic(() => import("@/components/TimelineQuiz"));
 import {
   Leaf, Shield, Sparkles, Trophy, Globe, Flame, Cpu, CheckSquare,
   BarChart3, BookOpen, MessageSquare, Map, Award, LogIn, LogOut, User,
@@ -22,7 +25,7 @@ import {
 
 type DashTab = "missions" | "gcp" | "leaderboard" | "academy" | "world-map" | "forum" | "insights" | "badges";
 
-const DASHBOARD_TABS: { id: DashTab; label: string; icon: React.ComponentType<any>; service?: string }[] = [
+const DASHBOARD_TABS: { id: DashTab; label: string; icon: React.ComponentType<{ className?: string }>; service?: string }[] = [
   { id: "missions", label: "Missions", icon: CheckSquare },
   { id: "insights", label: "AI Insights", icon: BarChart3, service: "Gemini + Translation" },
   { id: "leaderboard", label: "Leaderboard", icon: Trophy, service: "Firestore + BigQuery" },
@@ -121,7 +124,7 @@ export default function Home() {
                   id="user-menu-btn"
                 >
                   {user?.photoURL ? (
-                    <img src={user.photoURL} alt="avatar" className="w-5 h-5 rounded-full" />
+                    <Image src={user.photoURL} alt="User Avatar" width={20} height={20} className="rounded-full" />
                   ) : (
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
                       {user?.isAnonymous ? <Shield className="w-3 h-3 text-emerald-500" /> : <User className="w-3 h-3 text-emerald-400" />}
@@ -199,7 +202,7 @@ export default function Home() {
                 </span>
               </h1>
               <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-                Complete climate literacy quizzes, take a carbon footprint audit, compete on the global leaderboard, explore world leaders' climate plans, and get AI-powered missions — all in one platform.
+                Complete climate literacy quizzes, take a carbon footprint audit, compete on the global leaderboard, explore world leaders&apos; climate plans, and get AI-powered missions — all in one platform.
               </p>
             </div>
 

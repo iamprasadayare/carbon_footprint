@@ -24,6 +24,7 @@ export interface Mission {
   category: "transit" | "diet" | "energy";
   points: number;
   rationale: string;
+  completed?: boolean;
 }
 
 export async function POST(request: Request) {
@@ -180,14 +181,14 @@ export async function POST(request: Request) {
       const responseText = result.response.text();
       const parsedData = JSON.parse(responseText);
       return NextResponse.json(parsedData);
-    } catch (apiError: any) {
-      console.error("Gemini API failed, using mock missions:", apiError.message);
+    } catch (apiError: unknown) {
+      console.error("Gemini API failed, using mock missions:", (apiError instanceof Error ? apiError.message : String(apiError)));
       return NextResponse.json({
         missions: getMockMissions(),
         warning: "Gemini API unavailable — using intelligent local recommendations.",
       });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gemini Route Error:", error);
     return NextResponse.json(
       { error: "Failed to generate missions." },

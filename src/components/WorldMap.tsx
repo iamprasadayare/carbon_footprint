@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useAppState } from "@/app/providers";
 import { Globe2, Loader2, TrendingUp, TrendingDown, Minus, Info } from "lucide-react";
 
 const COUNTRY_COLORS = (value: number) => {
@@ -23,26 +22,25 @@ interface CountryData {
 export default function WorldMap() {
   const [countries, setCountries] = useState<CountryData[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<CountryData | null>(null);
-  const [countryPlan, setCountryPlan] = useState<any | null>(null);
+  const [countryPlan, setCountryPlan] = useState<{ target: string; progress: string; leader: string; initiatives: string[]; co2PerCapita: string } | null>(null);
   const [loadingPlan, setLoadingPlan] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchMapData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/leaderboard?type=map_data");
+        const data = await res.json();
+        setCountries(data.countries || []);
+      } catch {
+        setCountries([]);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchMapData();
   }, []);
-
-  async function fetchMapData() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/leaderboard?type=map_data");
-      const data = await res.json();
-      setCountries(data.countries || []);
-    } catch {
-      setCountries([]);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function fetchCountryPlan(country: string) {
     setLoadingPlan(true);
@@ -131,7 +129,7 @@ export default function WorldMap() {
             <path d="M600,240 L700,230 L710,310 L670,340 L620,330 L590,290 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" />
 
             {/* Country dots/markers */}
-            {countries.map((c, i) => {
+            {countries.map((c) => {
               const positions: Record<string, [number, number]> = {
                 China: [580, 100],
                 USA: [150, 120],

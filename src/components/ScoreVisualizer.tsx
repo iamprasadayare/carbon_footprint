@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useAppState } from "@/app/providers";
-import { Car, Leaf, Zap, RefreshCw, AlertCircle } from "lucide-react";
+import { Car, Leaf, Zap, RefreshCw } from "lucide-react";
 
 export default function ScoreVisualizer() {
   const { emissions, resetQuest } = useAppState();

@@ -40,7 +40,7 @@ User question: ${message}`;
     const reply = result.response.text();
 
     return NextResponse.json({ reply });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Chat API error:", error);
     return NextResponse.json({
       reply: "🌿 I'm having trouble connecting right now. Here's a quick tip: reducing meat consumption by just 50% can cut your diet-related emissions by nearly 30%!",

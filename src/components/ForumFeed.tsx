@@ -6,7 +6,7 @@ import { Heart, Send, MessageSquare, Flame, Zap, Leaf, Loader2, AlertCircle, Thu
 import { addForumPost, getForumPosts, likeForumPost, trackEvent } from "@/lib/firebase";
 
 const CATEGORIES = ["general", "transit", "diet", "energy", "tips"];
-const CATEGORY_ICONS: Record<string, any> = {
+const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   general: Globe,
   transit: Zap,
   diet: Leaf,
@@ -31,7 +31,7 @@ function timeAgo(seconds: number) {
 
 export default function ForumFeed() {
   const { uid } = useAppState();
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Array<{ id: string; displayName?: string; content: string; category: string; likes: number; createdAt?: { seconds: number } }>>([]);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [content, setContent] = useState("");

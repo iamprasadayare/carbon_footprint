@@ -25,7 +25,7 @@ export default function InsightsPanel() {
   const [insight, setInsight] = useState<Insight | null>(null);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [tips, setTips] = useState<any[]>([]);
+  const [tips, setTips] = useState<Array<{ tip: string; category: string; icon: string }>>([]);
   const [tipsLang, setTipsLang] = useState("en");
   const [tipsLoading, setTipsLoading] = useState(false);
 
@@ -34,6 +34,7 @@ export default function InsightsPanel() {
       fetchInsights();
       fetchTips(tipsLang);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [emissions]);
 
   async function fetchInsights() {

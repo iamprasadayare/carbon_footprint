@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Play, ExternalLink, Globe, BookOpen, Filter, Sparkles, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import { Play, ExternalLink, Globe, BookOpen, Sparkles, ChevronRight } from "lucide-react";
 
 interface ClimateVideo {
   id: string;
@@ -148,7 +149,7 @@ export default function AcademyPanel() {
           <button
             key={tab.id}
             type="button"
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as "videos" | "leaders" | "orgs" | "future")}
             className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === tab.id
                 ? "bg-emerald-500 text-slate-950 shadow"
@@ -209,9 +210,11 @@ export default function AcademyPanel() {
                       tabIndex={0}
                       aria-label={`Play ${video.title}`}
                     >
-                      <img
+                      <Image
                         src={video.thumbnail}
                         alt={video.title}
+                        width={640}
+                        height={360}
                         className="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
@@ -264,7 +267,7 @@ export default function AcademyPanel() {
                 </div>
               </div>
               <blockquote className="text-sm text-slate-300 italic leading-relaxed border-l-2 border-emerald-500/40 pl-3">
-                "{leader.quote}"
+                &ldquo;{leader.quote}&rdquo;
               </blockquote>
               <div className="bg-slate-950/40 rounded-xl p-3 space-y-1">
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Climate Commitment</p>

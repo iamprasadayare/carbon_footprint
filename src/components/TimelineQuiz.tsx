@@ -4,14 +4,9 @@ import React, { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAppState } from "@/app/providers";
 import { 
-  Globe, 
-  Flame, 
   HelpCircle, 
   ArrowRight, 
   Award, 
-  CheckCircle, 
-  XCircle, 
-  Sparkles,
   TreeDeciduous,
   Factory,
   Car,
@@ -24,7 +19,7 @@ interface Epoch {
   year: string;
   title: string;
   description: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string }>;
   details: string;
   stat: string;
   color: string;
@@ -410,7 +405,7 @@ export default function TimelineQuiz() {
                     Quiz Complete!
                   </h3>
                   <p className="text-slate-400 text-xs">
-                    You've finished the Carbon Literacy Quiz. Here is your offset starting score:
+                    You&apos;ve finished the Carbon Literacy Quiz. Here is your offset starting score:
                   </p>
                 </div>
 

@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       ["", "", "", ""],
       ["=== WEEKLY MISSIONS ===", "", "", ""],
       ["Mission", "Category", "Points", "Completed"],
-      ...(missions || []).map((m: any) => [
+      ...(missions || []).map((m: { task: string; category: string; points: number; completed: boolean }) => [
         m.task,
         m.category,
         m.points,
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         "X-Drive-Status": driveApiKey ? "live" : "download",
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Export API error:", error);
     return NextResponse.json({ error: "Export failed" }, { status: 500 });
   }

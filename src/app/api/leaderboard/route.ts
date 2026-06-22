@@ -63,7 +63,6 @@ export async function GET(request: Request) {
   }
 
   if (type === "stats") {
-    const leaderboard = generateLeaderboard();
     return NextResponse.json({
       totalUsers: 14827,
       totalMissionsCompleted: 42341,
